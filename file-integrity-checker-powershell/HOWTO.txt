@@ -1,0 +1,199 @@
+This document explains how to test the File Integrity Checker project from scratch.
+It is intended for reviewers, recruiters, or engineers who want to validate the tool’s behavior.
+
+------------------------------------------------------------
+Prerequisites
+------------------------------------------------------------
+
+- PowerShell Core 7.x or later
+- macOS, Linux, or Windows
+- Visual Studio Code (recommended but not required)
+
+Confirm PowerShell version:
+
+$PSVersionTable.PSVersion
+
+------------------------------------------------------------
+Step 1: Clone and enter the repository
+------------------------------------------------------------
+
+git clone <repository-url>
+cd file-integrity-checker-powershell
+
+Confirm files exist:
+
+ls
+
+You should see:
+- Invoke-FileIntegrityCheck.ps1
+- README.md (or README.txt)
+
+------------------------------------------------------------
+Step 2: Prepare a clean test environment
+------------------------------------------------------------
+
+Create test folders:
+
+mkdir testdata
+mkdir testdata/sub
+mkdir baseline
+
+Create test files:
+
+"hello world" | Out-File -Encoding utf8 ./testdata/file1.txt
+"config value" | Out-File -Encoding utf8 ./testdata/config.json
+"sub folder content" | Out-File -Encoding utf8 ./testdata/sub/file2.txt
+
+Verify structure:
+
+ls -Recurse ./testdata
+
+------------------------------------------------------------
+Step 3: Allow script execution (macOS / Linux)
+------------------------------------------------------------
+
+Run once per session:
+
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+------------------------------------------------------------
+Step 4: Create a baseline
+------------------------------------------------------------
+
+Run the baseline command:
+
+./Invoke-FileIntegrityCheck.ps1 -Mode baseline -Path ./testdata -ManifestPath ./baseline/manifest.json -Recurse
+
+Expected results:
+- baseline/manifest.json created
+- baseline/manifest.json.sha256 created
+- Console output indicates baseline creation
+
+Confirm files exist:
+
+Test-Path ./baseline/manifest.json
+Test-Path ./baseline/manifest.json.sha256
+
+Both should return True.
+
+------------------------------------------------------------
+Step 5: Verify integrity (no changes)
+------------------------------------------------------------
+
+Run verification:
+
+./Invoke-FileIntegrityCheck.ps1 -Mode verify -Path ./testdata -ManifestPath ./baseline/manifest.json
+
+Expected output:
+- Modified: 0
+- Missing : 0
+- New     : 0
+
+Check exit code:
+
+$LASTEXITCODE
+
+Expected:
+0
+
+------------------------------------------------------------
+Step 6: Introduce file changes
+------------------------------------------------------------
+
+Modify an existing file:
+
+"UPDATED CONTENT" | Out-File -Encoding utf8 ./testdata/file1.txt
+
+Add a new file:
+
+"new file" | Out-File -Encoding utf8 ./testdata/newfile.txt
+
+Delete a baseline file:
+
+Remove-Item ./testdata/config.json
+
+------------------------------------------------------------
+Step 7: Verify integrity (changes detected)
+------------------------------------------------------------
+
+Run verification again:
+
+./Invoke-FileIntegrityCheck.ps1 -Mode verify -Path ./testdata -ManifestPath ./baseline/manifest.json
+
+Expected output:
+- Modified: 1
+- Missing : 1
+- New     : 1
+
+Check exit code:
+
+$LASTEXITCODE
+
+Expected:
+2
+
+------------------------------------------------------------
+Step 8: Test manifest tamper detection (SHA-256)
+------------------------------------------------------------
+
+Open baseline/manifest.json in an editor.
+Change a character and save the file.
+
+Run strict verification:
+
+./Invoke-FileIntegrityCheck.ps1 -Mode verify -Path ./testdata -ManifestPath ./baseline/manifest.json -RequireManifestSignature
+
+Expected result:
+- Verification fails
+- Error indicates manifest tampering
+
+------------------------------------------------------------
+Step 9: Test structured output (SIEM-style ingestion)
+------------------------------------------------------------
+
+Run verification with output files:
+
+./Invoke-FileIntegrityCheck.ps1 -Mode verify -Path ./testdata -ManifestPath ./baseline/manifest.json -OutJson ./output/verify.json -OutCsv ./output/verify.csv
+
+Expected results:
+- output/verify.json created
+- output/verify.csv created
+- Files contain structured change data
+
+------------------------------------------------------------
+Step 10: Test quiet mode (automation)
+------------------------------------------------------------
+
+Run verification in quiet mode:
+
+./Invoke-FileIntegrityCheck.ps1 -Mode verify -Path ./testdata -ManifestPath ./baseline/manifest.json -Quiet
+
+No console output is expected.
+
+Check exit code:
+
+$LASTEXITCODE
+
+Exit codes:
+0 = No changes
+2 = Changes detected
+1 = Error
+
+------------------------------------------------------------
+Step 11: Re-baseline (reset trusted state)
+------------------------------------------------------------
+
+After legitimate changes, create a new baseline:
+
+./Invoke-FileIntegrityCheck.ps1 -Mode baseline -Path ./testdata -ManifestPath ./baseline/manifest.json -Recurse
+
+This replaces the previous trusted snapshot.
+
+------------------------------------------------------------
+Notes for Reviewers
+------------------------------------------------------------
+
+- Baselines should represent known-good states
+- Manifest files are security-sensitive and should not be committed
+- Exit codes are designed for automation and monitoring
+- JSON and CSV outputs are suitable for SIEM ingestion pipelines

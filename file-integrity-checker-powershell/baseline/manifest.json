@@ -1,0 +1,35 @@
+{
+  "GeneratedAtUtc": "2026-01-11T21:25:34.1472280Z",
+  "RootPath": "/Users/shahal-amin/Desktop/workhardplayhard/file-integrity-checker-powershell/testdata",
+  "Algorithm": "SHA256",
+  "Recurse": true,
+  "ExcludeExtensions": [
+    ".tmp",
+    ".log"
+  ],
+  "ExcludePaths": [],
+  "FileCount": 3,
+  "Files": [
+    {
+      "Path": "/Users/shahal-amin/Desktop/workhardplayhard/file-integrity-checker-powershell/testdata/config.json",
+      "Hash": "B0237787368724B8D3EC1459AAC174D467F5BB58466169E758D4534EFEF66657",
+      "Algorithm": "SHA256",
+      "SizeBytes": 13,
+      "LastWriteTimeUtc": "2026-01-11T21:18:00.8450985Z"
+    },
+    {
+      "Path": "/Users/shahal-amin/Desktop/workhardplayhard/file-integrity-checker-powershell/testdata/file1.txt",
+      "Hash": "A948904F2F0F479B8F8197694B30184B0D2ED1C1CD2A1EC0FB85D299A192A447",
+      "Algorithm": "SHA256",
+      "SizeBytes": 12,
+      "LastWriteTimeUtc": "2026-01-11T21:17:45.4670891Z"
+    },
+    {
+      "Path": "/Users/shahal-amin/Desktop/workhardplayhard/file-integrity-checker-powershell/testdata/sub/file2.txt",
+      "Hash": "CDED58FA3A6CFF4B5FC733D221D6B4676F97D991BA5FE53BDA245C82C1C46800",
+      "Algorithm": "SHA256",
+      "SizeBytes": 19,
+      "LastWriteTimeUtc": "2026-01-11T21:18:09.5082798Z"
+    }
+  ]
+}
